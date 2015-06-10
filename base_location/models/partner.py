@@ -35,3 +35,48 @@ class ResPartner(models.Model):
             self.city = self.zip_id.city
             self.state_id = self.zip_id.state_id
             self.country_id = self.zip_id.country_id
+
+    @api.one
+    def write(self, vals):
+        """ Ensure the zip_id is filled whenever possible. This is useful in
+        case segmentation is done on this field.
+        Try to match a zip_id based on country/zip/city or country/zip.
+        """
+        if 'zip_id' not in vals and (
+                'city' in vals or
+                'zip' in vals or
+                'country_id' in vals):
+            domain = []
+            zip_ids = []
+
+            if 'country_id' in vals:
+                country_id = vals['country_id']
+            else:
+                country_id = self.country_id.id
+            if 'zip' in vals:
+                zipcode = vals['zip']
+            else:
+                zipcode = self.zip
+            if 'city' in vals:
+                city = vals['city']
+            else:
+                city = self.city
+
+            if country_id:
+                domain.append(('country_id', '=', country_id))
+            if zipcode:
+                domain.append(('name', '=', zipcode))
+            if city:
+                zip_ids = self.env['res.better.zip'].search(domain + [('city', '=', city)])
+            if not city or not zip_ids:
+                zip_ids = self.env['res.better.zip'].search(domain)
+
+            if zip_ids:
+                vals['zip_id'] = zip_ids[0].id
+
+        return super(ResPartner, self).write(vals)
+
+    def _address_fields(self, cr, uid, context=None):
+        """ Returns the list of address fields that are synced from the parent
+        when the `use_parent_address` flag is set. """
+        return super(ResPartner, self)._address_fields(cr, uid, context=context) + ['zip_id']
