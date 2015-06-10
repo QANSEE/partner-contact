@@ -43,12 +43,11 @@ class ResPartner(models.Model):
         Try to match a zip_id based on country/zip/city or country/zip.
         """
         if 'zip_id' not in vals and (
-            'city' in vals or
-            'zip' in vals or
-            'country_id' in vals):
+                'city' in vals or
+                'zip' in vals or
+                'country_id' in vals):
             domain = []
             zip_ids = []
-            values = {}
 
             if 'country_id' in vals:
                 country_id = vals['country_id']
