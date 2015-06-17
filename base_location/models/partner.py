@@ -67,7 +67,7 @@ class ResPartner(models.Model):
             if zipcode:
                 domain.append(('name', '=', zipcode))
             if city:
-                zip_ids = self.env['res.better.zip'].search(domain + [('city', '=', city)])
+                zip_ids = self.env['res.better.zip'].search(domain + [('city', '=ilike', city)])
             if not city or not zip_ids:
                 zip_ids = self.env['res.better.zip'].search(domain)
 
