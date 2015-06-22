@@ -36,8 +36,7 @@ class ResPartner(models.Model):
             self.state_id = self.zip_id.state_id
             self.country_id = self.zip_id.country_id
 
-    @api.one
-    def write(self, vals):
+    def _compute_zip_id(self, vals):
         """ Ensure the zip_id is filled whenever possible. This is useful in
         case segmentation is done on this field.
         Try to match a zip_id based on country/zip/city or country/zip.
@@ -74,6 +73,15 @@ class ResPartner(models.Model):
             if zip_ids:
                 vals['zip_id'] = zip_ids[0].id
 
+    @api.model
+    @api.returns('self', lambda value: value.id)
+    def create(self, vals):
+        self._compute_zip_id(vals)
+        return super(ResPartner, self).create(vals)
+
+    @api.one
+    def write(self, vals):
+        self._compute_zip_id(vals)
         return super(ResPartner, self).write(vals)
 
     def _address_fields(self, cr, uid, context=None):
