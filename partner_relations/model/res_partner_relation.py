@@ -41,6 +41,13 @@ class ResPartnerRelation(models.Model):
     _description = 'Partner relation'
     _order = 'active desc, date_start desc, date_end desc'
 
+    def _search_any_partner_id(self, operator, value):
+        return [
+            '|',
+            ('left_partner_id', operator, value),
+            ('right_partner_id', operator, value),
+        ]
+
     def _get_computed_fields(
             self, cr, uid, ids, field_names, arg, context=None):
         '''Return a dictionary of dictionaries, with for every partner for
@@ -82,6 +89,7 @@ class ResPartnerRelation(models.Model):
         ),
     }
 
+    allow_self = fields.Boolean(related='type_id.allow_self')
     left_contact_type = fields.Selection(
         lambda s: s.env['res.partner.relation.type']._get_partner_types(),
         'Left Partner Type',
@@ -100,6 +108,7 @@ class ResPartnerRelation(models.Model):
         'res.partner',
         string='Partner',
         compute='_get_partner_type_any',
+        search='_search_any_partner_id'
     )
 
     left_partner_id = fields.Many2one(
@@ -287,9 +296,10 @@ class ResPartnerRelation(models.Model):
         :raises exceptions.Warning: When constraint is violated
         """
         if self.left_partner_id == self.right_partner_id:
-            raise exceptions.Warning(
-                _('Partners cannot have a relation with themselves.')
-            )
+            if not self.allow_self:
+                raise exceptions.Warning(
+                    _('Partners cannot have a relation with themselves.')
+                )
 
     @api.one
     @api.constrains('left_partner_id', 'right_partner_id', 'active')
