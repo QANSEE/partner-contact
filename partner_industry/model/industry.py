@@ -27,7 +27,8 @@ class Industry(orm.Model):
     _inherit = 'res.partner.category'
     _parent_store = True
     _parent_order = 'name'
-    _order = 'parent_left'
+    #_order = 'parent_left'
+    _order = 'name'
 
     _columns = {
         'code': fields.char('Code', size=16),
